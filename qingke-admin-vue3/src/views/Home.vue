@@ -1,11 +1,11 @@
 <script setup lang="ts">
+
 </script>
 
 <template>
-  <div id="app">
-    <router-view />
-  </div>
+<div class="container">Home</div>
 </template>
 
 <style scoped>
+
 </style>
