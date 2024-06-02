@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { login } from '../api/login.ts'
+import { login, register, sendCode } from '../api/login.ts'
 
 const signUpMode = ref<boolean>(false)
 const loginUser = ref({
@@ -24,11 +24,23 @@ const handleLogin = async () => {
     })
   }
 }
-const handleGetCode = () => {
-
+const handleGetCode = async () => {
+  const res = await sendCode()
+  if (res) {
+    ElMessage({
+      message: res.message,
+      type: 'success'
+    })
+  }
 }
-const handleRegister = () => {
-  console.log(regisUser)
+const handleRegister = async () => {
+  const res = await register(regisUser.value)
+  if (res) {
+    ElMessage({
+      message: res.message,
+      type: 'success'
+    })
+  }
 }
 </script>
 
