@@ -1,6 +1,28 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+
 const signUpMode = ref<boolean>(false)
+const loginUser = ref({
+  email: '',
+  password: ''
+});
+const regisUser = ref({
+  username: '',
+  email: '',
+  validCode: '',
+  password: ''
+});
+const repPassword = ref();
+
+const handleLogin = () => {
+  console.log(loginUser)
+}
+const handleGetCode = () => {
+
+}
+const handleRegister = () => {
+  console.log(regisUser)
+}
 </script>
 
 <template>
@@ -8,50 +30,56 @@ const signUpMode = ref<boolean>(false)
   <div class="forms-container">
     <div class="signin-signup">
     <!-- Login -->
-    <el-form label-width="120px" class="loginForm sign-in-form">
+    <el-form
+        label-width="120px"
+        class="loginForm sign-in-form"
+        :model="loginUser">
       <el-form-item label="邮箱">
-        <el-input placeholder="输入邮箱"></el-input>
+        <el-input placeholder="输入邮箱" v-model="loginUser.email"></el-input>
       </el-form-item>
       <el-form-item label="密码">
-        <el-input placeholder="输入密码" type="password"></el-input>
+        <el-input placeholder="输入密码" type="password" v-model="loginUser.password"></el-input>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" class="submit-btn">登陆</el-button>
+        <el-button type="primary" class="submit-btn" @click="handleLogin">登陆</el-button>
       </el-form-item>
       <div class="tiparea">
         <p>忘记密码？ <button>立即找回</button></p>
       </div>
     </el-form>
     <!-- Register -->
-    <el-form label-width="120px" class="registerForm sign-up-form">
+    <el-form
+        label-width="120px"
+        class="registerForm sign-up-form"
+        :model="regisUser">
       <el-form-item label="用户名">
-        <el-input placeholder="输入用户名"></el-input>
+        <el-input placeholder="输入用户名" v-model="regisUser.username"></el-input>
       </el-form-item>
       <el-form-item label="邮箱">
         <el-row :gutter="20">
           <el-col :span="18">
-            <el-input placeholder="输入邮箱"></el-input>
+            <el-input placeholder="输入邮箱" v-model="regisUser.email"></el-input>
           </el-col>
           <el-col :span="6">
             <el-row :gutter="20">
               <el-col :span="16">
-                <el-input placeholder="验证码"></el-input>
+                <el-input placeholder="验证码" v-model="regisUser.validCode"></el-input>
               </el-col>
               <el-col :span="8">
-                <el-button type="primary" plain>发送验证码</el-button>
+                <el-button type="primary" plain @click="handleGetCode">发送验证码</el-button>
               </el-col>
             </el-row>
           </el-col>
         </el-row>
       </el-form-item>
       <el-form-item label="密码">
-        <el-input placeholder="输入密码" type="password"></el-input>
+        <el-input placeholder="输入密码" type="password" v-model="regisUser.password"></el-input>
       </el-form-item>
       <el-form-item label="确认密码">
-        <el-input placeholder="再次输入密码" type="password"></el-input>
+        <el-input placeholder="再次输入密码" type="password" v-model="repPassword"></el-input>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" class="submit-btn">登陆</el-button>
+        <el-button type="primary" class="submit-btn" @click="handleRegister">注册</el-button>
       </el-form-item>
     </el-form>
     </div>
