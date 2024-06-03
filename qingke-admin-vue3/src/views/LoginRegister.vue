@@ -1,27 +1,172 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { login, register, sendCode } from '../api/login.ts'
+import { login, register, sendCode, checkCode } from '../api/login.ts'
+import { FormInstance } from "element-plus";
 
+interface LoginUser {
+  email: string,
+  password: string
+}
+interface LoginRules {
+  email: {
+    trigger: string;
+    type: string;
+    message: string;
+    required: boolean
+  }[];
+  password: ({
+    trigger: string;
+    message: string;
+    required: boolean
+  } | {
+    min: number;
+    max: number;
+    trigger: string;
+    message: string
+  })[]
+}
+interface RegisUser {
+  username: string
+  email: string;
+  validCode: string;
+  password: string;
+}
+interface RegisRules {
+  username: ({
+    trigger: string;
+    message: string;
+    required: boolean;
+  } | {
+    min: number;
+    max: number;
+    trigger: string;
+    message: string;
+  })[],
+  email: {
+    trigger: string;
+    type: string;
+    message: string;
+    required: boolean;
+  }[],
+  password: ({
+    trigger: string;
+    message: string;
+    required: boolean;
+  } | {
+    min: number;
+    max: number;
+    trigger: string;
+    message: string;
+  })[],
+  validCode: {
+    trigger: string;
+    message: string;
+    required: boolean;
+  }[],
+  repPassword: {
+    validator: (rule: RegisRules, value: string, callback: any) => void;
+    trigger: string;
+  }[]
+}
 const signUpMode = ref<boolean>(false)
-const loginUser = ref({
+const loginForm = ref<FormInstance>()
+const loginUser = ref<LoginUser>({
   email: '',
   password: ''
 });
-const regisUser = ref({
+const loginRules = ref<LoginRules>({
+  email: [{
+    type: 'email',
+    message: '邮箱格式有误',
+    required: true,
+    trigger: 'blur'
+  }],
+  password: [{
+    message: '密码不能为空',
+    required: true,
+    trigger: 'blur'
+  },{
+    min: 6,
+    max: 16,
+    message: '密码长度必须在 6～16 字符内',
+    trigger: 'blur'
+  }]
+})
+const regisForm = ref<FormInstance>()
+const regisUser = ref<RegisUser>({
   username: '',
   email: '',
   validCode: '',
-  password: ''
+  password: '',
+  repPassword: '',
 });
-const repPassword = ref();
-
-const handleLogin = async () => {
-  const res = await login(loginUser.value)
-  if (res) {
-    ElMessage({
-      message: res.message,
-      type: 'success'
-    })
+const validateRepPassword = (rule: RegisRules, value: string, callback: any) => {
+  if (value === '') {
+    callback(new Error('请再次输入密码'))
+  } else if (value !== regisUser.value.password) {
+    console.log(value)
+    callback(new Error('两次密码输入不一致'))
+  } else {
+    callback()
+  }
+}
+const regisRules = ref<RegisRules>({
+  username: [{
+    message: '用户名不能为空',
+    required: true,
+    trigger: 'blur',
+  },{
+    min: 2,
+    max: 30,
+    message: '用户名长度在 2 到 30 字符',
+    trigger: 'blur'
+  }],
+  email: [{
+    type: 'email',
+    message: '邮箱的格式有误',
+    required: true,
+    trigger: 'blur'
+  }],
+  validCode: [{
+    message: '验证码不能为空',
+    required: true,
+    trigger: 'blur'
+  }],
+  password: [{
+    message: '密码不能为空',
+    required: true,
+    trigger: 'blur'
+  },{
+    min: 6,
+    max: 30,
+    message: '密码长度范围必须在 6~30 字符内',
+    trigger: 'blur'
+  }],
+  repPassword: [{
+    validator: validateRepPassword,
+    trigger: 'blur'
+  }]
+})
+const handleLogin = async (formEl: FormInstance | undefined) => {
+  try {
+    // 先校验表单
+    await validateLoginForm(formEl)
+    // 执行登录逻辑
+    const res = await login(loginUser.value)
+    if (res) {
+      ElMessage({
+        message: res.message,
+        type: 'success'
+      })
+    }
+  } catch (error) {
+  }
+}
+const validateLoginForm = async (loginForm: FormInstance | undefined) => {
+  try {
+    await loginForm.validate()
+  } catch (error) {
+    throw error;
   }
 }
 const handleGetCode = async () => {
@@ -33,7 +178,8 @@ const handleGetCode = async () => {
     })
   }
 }
-const handleRegister = async () => {
+const handleRegister = async (formEl: FormInstance | undefined) => {
+  await validateRegisForm(formEl)
   const res = await register(regisUser.value)
   if (res) {
     ElMessage({
@@ -41,6 +187,10 @@ const handleRegister = async () => {
       type: 'success'
     })
   }
+}
+const validateRegisForm = async (regisForm: FormInstance | undefined) => {
+  await regisForm.validate()
+  await checkCode(regisUser.value.validCode)
 }
 </script>
 
@@ -50,17 +200,21 @@ const handleRegister = async () => {
     <div class="signin-signup">
     <!-- Login -->
     <el-form
+        ref="loginForm"
         label-width="120px"
         class="loginForm sign-in-form"
-        :model="loginUser">
-      <el-form-item label="邮箱">
+        :model="loginUser"
+        :rules="loginRules"
+        status-icon
+    >
+      <el-form-item label="邮箱" prop="email">
         <el-input placeholder="输入邮箱" v-model="loginUser.email"></el-input>
       </el-form-item>
-      <el-form-item label="密码">
+      <el-form-item label="密码" prop="password">
         <el-input placeholder="输入密码" type="password" v-model="loginUser.password"></el-input>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" class="submit-btn" @click="handleLogin">登陆</el-button>
+        <el-button type="primary" class="submit-btn" @click="handleLogin(loginForm)">登陆</el-button>
       </el-form-item>
       <div class="tiparea">
         <p>忘记密码？ <button>立即找回</button></p>
@@ -68,37 +222,33 @@ const handleRegister = async () => {
     </el-form>
     <!-- Register -->
     <el-form
+        ref="regisForm"
         label-width="120px"
         class="registerForm sign-up-form"
-        :model="regisUser">
-      <el-form-item label="用户名">
+        :model="regisUser"
+        :rules="regisRules"
+        status-icon
+    >
+      <el-form-item label="用户名" prop="username">
         <el-input placeholder="输入用户名" v-model="regisUser.username"></el-input>
       </el-form-item>
-      <el-form-item label="邮箱">
-        <el-row :gutter="20">
-          <el-col :span="18">
-            <el-input placeholder="输入邮箱" v-model="regisUser.email"></el-input>
-          </el-col>
-          <el-col :span="6">
-            <el-row :gutter="20">
-              <el-col :span="16">
-                <el-input placeholder="验证码" v-model="regisUser.validCode"></el-input>
-              </el-col>
-              <el-col :span="8">
-                <el-button type="primary" plain @click="handleGetCode">发送验证码</el-button>
-              </el-col>
-            </el-row>
-          </el-col>
-        </el-row>
+      <el-form-item label="邮箱" prop="email">
+        <el-input placeholder="输入邮箱" v-model="regisUser.email"></el-input>
       </el-form-item>
-      <el-form-item label="密码">
+      <el-form-item prop="validCode">
+        <div class="flex-container">
+          <el-button type="primary" plain @click="handleGetCode">发送验证码</el-button>
+          <el-input placeholder="验证码" v-model="regisUser.validCode"></el-input>
+        </div>
+      </el-form-item>
+      <el-form-item label="密码" prop="password">
         <el-input placeholder="输入密码" type="password" v-model="regisUser.password"></el-input>
       </el-form-item>
-      <el-form-item label="确认密码">
-        <el-input placeholder="再次输入密码" type="password" v-model="repPassword"></el-input>
+      <el-form-item label="确认密码" prop="repPassword">
+        <el-input placeholder="再次输入密码" type="password" v-model="regisUser.repPassword"></el-input>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" class="submit-btn" @click="handleRegister">注册</el-button>
+        <el-button type="primary" class="submit-btn" @click="handleRegister(regisForm)">注册</el-button>
       </el-form-item>
     </el-form>
     </div>
@@ -126,6 +276,13 @@ const handleRegister = async () => {
 </template>
 
 <style scoped>
+.flex-container {
+  display: flex;
+  align-items: center;
+}
+.flex-container .el-button {
+  margin-right: 10px;
+}
 .loginForm {
   margin-top: 20px;
   background-color: #fff;
