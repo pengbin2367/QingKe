@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { login, register, sendCode, checkCode } from '../api/login.ts'
+import { login, register, sendCode, checkCode } from '@/api/login.ts'
 import { FormInstance } from "element-plus";
 
 interface LoginUser {

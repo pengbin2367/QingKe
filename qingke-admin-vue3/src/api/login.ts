@@ -1,4 +1,4 @@
-import request from "../utils/request.ts";
+import request from "@/utils/request.ts";
 
 export const login = (data) => request({ url: '/admin/user/login', method: 'post', data })
 export const register = (data) => request({ url: '/admin/user/register', method: 'post', data })
